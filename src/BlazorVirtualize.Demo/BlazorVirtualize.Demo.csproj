@@ -10,4 +10,9 @@
     <ProjectReference Include="..\BlazorVirtualize\BlazorVirtualize.csproj" />
   </ItemGroup>
 
+  <!-- Embed the demo page sources so the "View source" toggle can display them at runtime. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Components\Pages\*.razor" />
+  </ItemGroup>
+
 </Project>

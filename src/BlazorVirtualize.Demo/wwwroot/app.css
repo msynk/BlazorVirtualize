@@ -311,3 +311,67 @@ a:hover { text-decoration: underline; }
 .hsk .b3 { width: 55%; height: 11px; }
 .hsk .b4 { width: 40%; height: 9px; margin-top: auto; }
 .hsk .b { background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 37%, #eef2f7 63%); background-size: 400% 100%; animation: shimmer 1.4s ease infinite; }
+
+/* ===== Source viewer ===== */
+.source {
+    margin: 0 0 1.25rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+.source.open { box-shadow: var(--shadow); }
+
+.source-head { display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem; }
+
+.source-toggle {
+    display: inline-flex; align-items: center; gap: .55rem;
+    padding: .4rem .6rem; border: none; background: transparent; cursor: pointer;
+    font: inherit; font-size: .9rem; font-weight: 600; color: var(--text);
+    border-radius: var(--radius-sm); transition: background .12s;
+}
+.source-toggle:hover { background: var(--surface-2); }
+.source-toggle .chev { font-size: .75rem; color: var(--primary-dark); width: .8em; }
+.source-toggle .src-file {
+    font-family: "Cascadia Code", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .78rem; font-weight: 500; color: var(--text-faint);
+    background: var(--surface-2); border: 1px solid var(--border);
+    padding: .1rem .5rem; border-radius: 999px;
+}
+
+.source-copy {
+    margin-left: auto;
+    padding: .4rem .85rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: #eef2ff; color: var(--primary-dark);
+    font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+    transition: background .12s, transform .12s;
+}
+.source-copy:hover { background: #e0e7ff; transform: translateY(-1px); }
+.source-copy:active { transform: translateY(0); }
+
+.source-window { border-top: 1px solid var(--border); }
+.source-window-bar {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .55rem .9rem; background: #111827; border-bottom: 1px solid #1f2937;
+}
+.source-window-bar .traffic { display: flex; gap: 6px; }
+.source-window-bar .traffic i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.source-window-bar .traffic i:nth-child(1){ background:#f87171; }
+.source-window-bar .traffic i:nth-child(2){ background:#fbbf24; }
+.source-window-bar .traffic i:nth-child(3){ background:#34d399; }
+.source-window-title {
+    font-family: "Cascadia Code", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .76rem; color: #94a3b8; letter-spacing: .2px;
+}
+
+.source-code {
+    margin: 0; padding: 1.15rem 1.35rem; overflow: auto; max-height: 560px;
+    background: #0f172a; color: #e2e8f0;
+    font-family: "Cascadia Code", "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .82rem; line-height: 1.7; tab-size: 4; -moz-tab-size: 4;
+}
+.source-code code { font-family: inherit; white-space: pre; }
+.source-code::selection, .source-code ::selection { background: rgba(99,102,241,.45); }
+.source-code::-webkit-scrollbar { width: 11px; height: 11px; }
+.source-code::-webkit-scrollbar-track { background: #0f172a; }
+.source-code::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; border: 2px solid #0f172a; }
+.source-code::-webkit-scrollbar-thumb:hover { background: #475569; }

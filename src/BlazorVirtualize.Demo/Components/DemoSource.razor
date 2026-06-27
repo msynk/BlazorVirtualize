@@ -1,0 +1,51 @@
+@inject IJSRuntime JS
+
+<div class="source @(_open ? "open" : null)">
+    <div class="source-head">
+        <button class="source-toggle" @onclick="Toggle" aria-expanded="@_open">
+            <span class="chev">@(_open ? "▾" : "▸")</span>
+            <span class="src-label">@(_open ? "Hide source" : "View source")</span>
+            <span class="src-file">@($"{Page}.razor")</span>
+        </button>
+        @if (_open)
+        {
+            <button class="source-copy" @onclick="Copy">
+                @(_copied ? "✓ Copied" : "Copy")
+            </button>
+        }
+    </div>
+
+    @if (_open)
+    {
+        <div class="source-window">
+            <div class="source-window-bar">
+                <span class="traffic"><i></i><i></i><i></i></span>
+                <span class="source-window-title">@($"{Page}.razor")</span>
+            </div>
+            <pre class="source-code"><code>@_code</code></pre>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>Page source file name without extension, e.g. "FixedDemo".</summary>
+    [Parameter, EditorRequired] public string Page { get; set; } = default!;
+
+    private bool _open;
+    private bool _copied;
+    private string _code = string.Empty;
+
+    protected override void OnInitialized() => _code = DemoSourceLoader.Load(Page);
+
+    private void Toggle()
+    {
+        _open = !_open;
+        _copied = false;
+    }
+
+    private async Task Copy()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", _code);
+        _copied = true;
+    }
+}
