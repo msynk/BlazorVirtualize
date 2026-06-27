@@ -1,0 +1,65 @@
+@page "/provider"
+@rendermode InteractiveServer
+
+<PageTitle>Lazy loading — BlazorVirtualize</PageTitle>
+
+<div class="page-head">
+    <span class="eyebrow">Lazy loading</span>
+    <h1>Data on demand</h1>
+    <p>Rows are fetched as you scroll through an <code>ItemsProvider</code>. A simulated 250ms latency shows the animated skeleton placeholder while each window loads. Total: 500,000 records.</p>
+</div>
+
+<div class="stage">
+    <div class="stage-bar">
+        <span class="traffic"><i></i><i></i><i></i></span>
+        <span>500,000 records · fetched in windows</span>
+    </div>
+    <BlazorVirtualize TItem="Record" ItemsProvider="LoadItems" ItemSize="60"
+                      class="vlist" style="height:560px;">
+        <ItemContent>
+            <div class="lrow">
+                <span class="avatar">@context.Initials</span>
+                <span class="txt">
+                    @context.Name
+                    <small>record #@context.Id.ToString("N0") · loaded @context.LoadedAt</small>
+                </span>
+            </div>
+        </ItemContent>
+        <Placeholder>
+            <div class="skeleton">
+                <span class="sk-av"></span>
+                <span class="sk-lines">
+                    <span class="sk-line"></span>
+                    <span class="sk-line short"></span>
+                </span>
+            </div>
+        </Placeholder>
+        <LoadingContent>
+            <div class="skeleton" style="border:none;"><span class="sk-av"></span><span class="sk-lines"><span class="sk-line"></span><span class="sk-line short"></span></span></div>
+        </LoadingContent>
+    </BlazorVirtualize>
+</div>
+
+@code {
+    private const int Total = 500_000;
+    private static readonly string[] First = { "Ava", "Liam", "Noah", "Mia", "Zoe", "Eli", "Aria", "Leo", "Ivy", "Kai" };
+    private static readonly string[] Last = { "Stone", "Vance", "Hale", "Reed", "Cross", "Lane", "Frost", "Wells" };
+
+    private async ValueTask<BlazorVirtualizeItemsProviderResult<Record>> LoadItems(BlazorVirtualizeItemsProviderRequest request)
+    {
+        await Task.Delay(250, request.CancellationToken);
+
+        var items = Enumerable
+            .Range(request.StartIndex, Math.Min(request.Count, Total - request.StartIndex))
+            .Select(i =>
+            {
+                var name = $"{First[i % First.Length]} {Last[(i / First.Length) % Last.Length]}";
+                return new Record(i, name, string.Concat(name.Split(' ').Select(p => p[0])), DateTime.Now.ToString("HH:mm:ss.fff"));
+            })
+            .ToList();
+
+        return new BlazorVirtualizeItemsProviderResult<Record>(items, Total);
+    }
+
+    public record Record(int Id, string Name, string Initials, string LoadedAt);
+}

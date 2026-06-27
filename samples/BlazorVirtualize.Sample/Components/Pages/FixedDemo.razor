@@ -1,0 +1,76 @@
+@page "/fixed"
+@rendermode InteractiveServer
+
+<PageTitle>Fixed size — BlazorVirtualize</PageTitle>
+
+<div class="page-head">
+    <span class="eyebrow">Fixed size</span>
+    <h1>One million rows</h1>
+    <p>Every row is exactly 56px tall, so positions are pure arithmetic. Only the rows in view exist in the DOM — scroll anywhere instantly.</p>
+</div>
+
+<div class="toolbar">
+    <label for="idx">Go to</label>
+    <input id="idx" type="number" @bind="_target" min="0" max="999999" />
+    <button class="btn" @onclick="ScrollTo">Scroll to row</button>
+    <button class="btn ghost" @onclick="ScrollRandom">Random</button>
+    <span class="spacer"></span>
+    <span class="badge"><b>@_visibleStart.ToString("N0")</b> – <b>@_visibleEnd.ToString("N0")</b> visible</span>
+</div>
+
+<div class="stage">
+    <div class="stage-bar">
+        <span class="traffic"><i></i><i></i><i></i></span>
+        <span>1,000,000 items · ItemSize 56px</span>
+    </div>
+    <BlazorVirtualize @ref="_list" TItem="int" Items="_items" ItemSize="56"
+                      OnVisibleRangeChanged="OnRangeChanged"
+                      class="vlist" style="height:540px;">
+        <ItemContent>
+            <div class="row">
+                <span class="idx">#@context.ToString("N0")</span>
+                <span class="avatar" style="background:@Color(context)">@Initials(context)</span>
+                <span class="who">
+                    <span class="name">@Name(context)</span>
+                    <span class="sub">user-@context&#64;example.com</span>
+                </span>
+                <span class="val">@((context * 37 % 1000).ToString("C0"))</span>
+            </div>
+        </ItemContent>
+    </BlazorVirtualize>
+</div>
+
+@code {
+    private BlazorVirtualize<int>? _list;
+    private readonly int[] _items = Enumerable.Range(0, 1_000_000).ToArray();
+    private readonly Random _rnd = new();
+    private int _target;
+    private int _visibleStart;
+    private int _visibleEnd;
+
+    private static readonly string[] First = { "Ava", "Liam", "Noah", "Mia", "Zoe", "Eli", "Aria", "Leo", "Ivy", "Kai", "Nora", "Theo" };
+    private static readonly string[] Last = { "Stone", "Vance", "Hale", "Reed", "Cross", "Lane", "Frost", "Wells", "Park", "Quinn", "Vega", "Ford" };
+    private static readonly string[] Hues = { "#6366f1", "#06b6d4", "#ec4899", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444", "#0ea5e9" };
+
+    private static string Name(int i) => $"{First[i % First.Length]} {Last[(i / First.Length) % Last.Length]}";
+    private static string Initials(int i) => $"{First[i % First.Length][0]}{Last[(i / First.Length) % Last.Length][0]}";
+    private static string Color(int i) => Hues[i % Hues.Length];
+
+    private async Task ScrollTo()
+    {
+        if (_list is not null)
+            await _list.ScrollToIndexAsync(_target, BlazorVirtualizeScrollAlignment.Start, smooth: true);
+    }
+
+    private async Task ScrollRandom()
+    {
+        _target = _rnd.Next(0, _items.Length);
+        await ScrollTo();
+    }
+
+    private void OnRangeChanged((int Start, int End) range)
+    {
+        _visibleStart = range.Start;
+        _visibleEnd = range.End;
+    }
+}

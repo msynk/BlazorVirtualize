@@ -1,0 +1,92 @@
+@page "/dynamic"
+@rendermode InteractiveServer
+
+<PageTitle>Dynamic height — BlazorVirtualize</PageTitle>
+
+<div class="page-head">
+    <span class="eyebrow">Dynamic height</span>
+    <h1>Measured, variable-height items</h1>
+    <p>Each post wraps to a different height. The component measures every rendered row with a ResizeObserver and anchors the scroll position so content never jumps as sizes settle.</p>
+</div>
+
+<div class="toolbar">
+    <label for="idx">Go to</label>
+    <input id="idx" type="number" @bind="_target" min="0" max="19999" />
+    <button class="btn" @onclick="ScrollTo">Scroll &amp; center</button>
+    <span class="spacer"></span>
+    <span class="badge"><span class="dot"></span> 20,000 posts</span>
+</div>
+
+<div class="stage">
+    <div class="stage-bar">
+        <span class="traffic"><i></i><i></i><i></i></span>
+        <span>Variable height · EstimatedItemSize 96px</span>
+    </div>
+    <BlazorVirtualize @ref="_list" TItem="Post" Items="_posts"
+                      SizeMode="BlazorVirtualizeSizeMode.Dynamic" EstimatedItemSize="96"
+                      class="vlist" style="height:560px;">
+        <ItemContent>
+            <article class="post">
+                <span class="avatar" style="background:@context.Color">@context.Initials</span>
+                <div class="body">
+                    <div class="meta">
+                        <span class="author">@context.Author</span>
+                        <span class="time">@context.Time</span>
+                        <span class="pill">@context.Topic</span>
+                    </div>
+                    <p>@context.Body</p>
+                    <div class="tags">
+                        @foreach (var t in context.Tags)
+                        {
+                            <span>#@t</span>
+                        }
+                    </div>
+                </div>
+            </article>
+        </ItemContent>
+    </BlazorVirtualize>
+</div>
+
+@code {
+    private BlazorVirtualize<Post>? _list;
+    private List<Post> _posts = default!;
+    private int _target;
+
+    private static readonly string[] Authors = { "Ava Stone", "Liam Vance", "Mia Hale", "Noah Reed", "Zoe Cross", "Eli Lane", "Aria Frost", "Leo Wells" };
+    private static readonly string[] Topics = { "Release", "Tip", "Discussion", "Question", "Showcase" };
+    private static readonly string[] TagPool = { "blazor", "dotnet", "perf", "ui", "webassembly", "css", "dx", "scroll" };
+    private static readonly string[] Hues = { "#6366f1", "#06b6d4", "#ec4899", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444", "#0ea5e9" };
+
+    protected override void OnInitialized()
+    {
+        var rnd = new Random(42);
+        var lorem = ("Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut " +
+                     "labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris " +
+                     "nisi aliquip ex ea commodo consequat duis aute irure reprehenderit voluptate velit esse").Split(' ');
+
+        _posts = Enumerable.Range(0, 20_000).Select(i =>
+        {
+            int words = rnd.Next(10, 70);
+            var body = char.ToUpper(lorem[rnd.Next(lorem.Length)][0]) +
+                       string.Join(' ', Enumerable.Range(0, words).Select(_ => lorem[rnd.Next(lorem.Length)])).Substring(1) + ".";
+            var author = Authors[i % Authors.Length];
+            var tags = Enumerable.Range(0, rnd.Next(1, 4)).Select(_ => TagPool[rnd.Next(TagPool.Length)]).Distinct().ToArray();
+            return new Post(
+                Author: author,
+                Initials: string.Concat(author.Split(' ').Select(p => p[0])),
+                Color: Hues[i % Hues.Length],
+                Time: $"{rnd.Next(1, 59)}m ago",
+                Topic: Topics[rnd.Next(Topics.Length)],
+                Body: body,
+                Tags: tags);
+        }).ToList();
+    }
+
+    private async Task ScrollTo()
+    {
+        if (_list is not null)
+            await _list.ScrollToIndexAsync(_target, BlazorVirtualizeScrollAlignment.Center, smooth: true);
+    }
+
+    public record Post(string Author, string Initials, string Color, string Time, string Topic, string Body, string[] Tags);
+}

@@ -1,0 +1,55 @@
+﻿@page "/"
+
+<PageTitle>BlazorVirtualize — Overview</PageTitle>
+
+<section class="hero">
+    <h1>Render millions of rows, smoothly.</h1>
+    <p>
+        BlazorVirtualize is a native windowing component that keeps only the visible items
+        in the DOM. It supports fixed and dynamically measured sizes, both orientations,
+        lazy data loading, and scroll anchoring — all without leaving Blazor.
+    </p>
+    <div class="stats">
+        <div class="stat"><strong>1,000,000</strong><span>rows, ~20 in DOM</span></div>
+        <div class="stat"><strong>O(log n)</strong><span>dynamic sizing</span></div>
+        <div class="stat"><strong>0 jumps</strong><span>scroll anchoring</span></div>
+    </div>
+</section>
+
+<div class="card-grid">
+    <a class="demo-card" href="fixed">
+        <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.3"/><circle cx="4" cy="12" r="1.3"/><circle cx="4" cy="18" r="1.3"/></svg>
+        </span>
+        <h3>Fixed size</h3>
+        <p>One million uniform rows with a constant DOM footprint and scroll-to-index.</p>
+        <span class="go">Open demo →</span>
+    </a>
+
+    <a class="demo-card" href="dynamic">
+        <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="4" rx="1"/><rect x="3" y="10" width="18" height="7" rx="1"/><rect x="3" y="19" width="18" height="2" rx="1"/></svg>
+        </span>
+        <h3>Dynamic height</h3>
+        <p>Variable-height items measured in the browser, with no content jumping.</p>
+        <span class="go">Open demo →</span>
+    </a>
+
+    <a class="demo-card" href="provider">
+        <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6 1.8A3.6 3.6 0 0 0 6 19z"/></svg>
+        </span>
+        <h3>Lazy loading</h3>
+        <p>Fetch windows on demand via ItemsProvider with animated skeleton placeholders.</p>
+        <span class="go">Open demo →</span>
+    </a>
+
+    <a class="demo-card" href="horizontal">
+        <span class="ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="5" height="14" rx="1"/><rect x="10" y="5" width="5" height="14" rx="1"/><rect x="17" y="5" width="4" height="14" rx="1"/></svg>
+        </span>
+        <h3>Horizontal</h3>
+        <p>Virtualization along the X axis for carousels and timelines.</p>
+        <span class="go">Open demo →</span>
+    </a>
+</div>

@@ -1,0 +1,61 @@
+@typeparam TItem
+@namespace BlazorVirtualization
+
+<div @ref="_viewport"
+     class="@CssClass"
+     @attributes="SplatAttributes">
+
+    @if (!_initialized && LoadingContent is not null && _itemCount == 0)
+    {
+        <div class="bv-loading">@LoadingContent</div>
+    }
+    else if (_itemCount == 0 && !_loading)
+    {
+        @if (EmptyContent is not null)
+        {
+            <div class="bv-empty">@EmptyContent</div>
+        }
+    }
+    else
+    {
+        <div class="bv-spacer" style="@SpacerStyle()">
+            @for (int i = _renderStart; i < _renderEnd; i++)
+            {
+                var index = i;
+                var offset = GetItemOffset(index);
+                <div class="bv-item" data-bv-index="@index" style="@ItemStyle(offset)" @key="index">
+                    @if (TryGetItem(index, out var item))
+                    {
+                        @ItemContent(item)
+                    }
+                    else if (Placeholder is not null)
+                    {
+                        @Placeholder(new BlazorVirtualizePlaceholderContext(index, GetItemSize(index)))
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private string SpacerStyle()
+    {
+        var total = GetTotalSize().ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        return Horizontal ? $"width:{total}px;" : $"height:{total}px;";
+    }
+
+    private string ItemStyle(double offset)
+    {
+        var o = offset.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        if (Horizontal)
+        {
+            // In fixed mode pin the width so each item exactly fills its slot.
+            var w = Dynamic ? string.Empty : $"width:{ItemSize.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;";
+            return $"transform:translateX({o}px);{w}";
+        }
+
+        var h = Dynamic ? string.Empty : $"height:{ItemSize.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;";
+        return $"transform:translateY({o}px);{h}";
+    }
+}

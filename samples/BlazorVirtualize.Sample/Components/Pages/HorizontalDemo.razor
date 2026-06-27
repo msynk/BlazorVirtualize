@@ -1,0 +1,187 @@
+@page "/horizontal"
+@rendermode InteractiveServer
+
+<PageTitle>Horizontal — BlazorVirtualize</PageTitle>
+
+<div class="page-head">
+    <span class="eyebrow">Horizontal</span>
+    <h1>Scrolling along the X axis</h1>
+    <p>The same engine, oriented horizontally. Below are several patterns: fixed-width cards with scroll-to, a poster gallery, variable-width chips measured at runtime, and a lazy-loaded rail.</p>
+</div>
+
+@* ---- Rail 1: fixed-width number tiles with scroll-to ---- *@
+<section class="rail">
+    <div class="rail-head">
+        <h2>Fixed-width tiles</h2>
+        <span class="hint">100,000 cards · 168px each</span>
+        <span class="spacer"></span>
+        <input type="number" @bind="_target" min="0" max="99999" style="width:110px;padding:.4rem .6rem;border:1px solid var(--border);border-radius:9px;" />
+        <button class="btn" @onclick="ScrollTiles">Scroll to</button>
+        <button class="btn ghost" @onclick="ScrollTilesRandom">Random</button>
+    </div>
+    <div class="stage">
+        <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Orientation Horizontal · fixed size</span></div>
+        <BlazorVirtualize @ref="_tiles" TItem="int" Items="_numbers" ItemSize="168"
+                          Orientation="BlazorVirtualizeOrientation.Horizontal"
+                          class="vlist" style="height:150px;">
+            <ItemContent>
+                <div class="hcard">
+                    <div class="inner" style="background:@Gradient(context)">
+                        <span class="lbl">Item</span>
+                        <span class="num">@context.ToString("N0")</span>
+                    </div>
+                </div>
+            </ItemContent>
+        </BlazorVirtualize>
+    </div>
+</section>
+
+@* ---- Rail 2: poster / media gallery ---- *@
+<section class="rail">
+    <div class="rail-head">
+        <h2>Media gallery</h2>
+        <span class="hint">8,000 posters · taller fixed cards</span>
+    </div>
+    <div class="stage">
+        <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Carousel-style rail</span></div>
+        <BlazorVirtualize TItem="int" Items="_gallery" ItemSize="168"
+                          Orientation="BlazorVirtualizeOrientation.Horizontal"
+                          class="vlist" style="height:210px;">
+            <ItemContent>
+                <div class="poster">
+                    <div class="art" style="background:@Gradient(context)"><span class="glyph">@Glyph(context)</span></div>
+                    <div class="pinfo">
+                        <div class="pt">@Title(context)</div>
+                        <div class="pm">@(2000 + context % 25) · @((context * 7 % 50) / 10.0 + 1.0)★</div>
+                    </div>
+                </div>
+            </ItemContent>
+        </BlazorVirtualize>
+    </div>
+</section>
+
+@* ---- Rail 3: variable-width chips (dynamic horizontal sizing) ---- *@
+<section class="rail">
+    <div class="rail-head">
+        <h2>Variable-width chips</h2>
+        <span class="hint">Dynamic mode — each chip is measured, width follows its text</span>
+    </div>
+    <div class="stage">
+        <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Horizontal + SizeMode.Dynamic · X-axis scroll anchoring</span></div>
+        <BlazorVirtualize TItem="Category" Items="_chips"
+                          Orientation="BlazorVirtualizeOrientation.Horizontal"
+                          SizeMode="BlazorVirtualizeSizeMode.Dynamic" EstimatedItemSize="140"
+                          class="vlist" style="height:70px;">
+            <ItemContent>
+                <div class="chip-x">
+                    <span class="pill-lg" style="background:@Gradient(context.Id)">
+                        @context.Name <span class="cnt">@context.Count.ToString("N0")</span>
+                    </span>
+                </div>
+            </ItemContent>
+        </BlazorVirtualize>
+    </div>
+</section>
+
+@* ---- Rail 4: lazy-loaded horizontal rail ---- *@
+<section class="rail">
+    <div class="rail-head">
+        <h2>Lazy loaded</h2>
+        <span class="hint">200,000 items fetched on demand with skeletons</span>
+    </div>
+    <div class="stage">
+        <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Horizontal + ItemsProvider</span></div>
+        <BlazorVirtualize TItem="Tile" ItemsProvider="LoadTiles" ItemSize="160"
+                          Orientation="BlazorVirtualizeOrientation.Horizontal"
+                          class="vlist" style="height:140px;">
+            <ItemContent>
+                <div class="hlazy">
+                    <div class="inner">
+                        <span class="av" style="background:@Gradient(context.Id)">@context.Initials</span>
+                        <span class="nm">@context.Name</span>
+                        <span class="meta">#@context.Id.ToString("N0") · @context.LoadedAt</span>
+                    </div>
+                </div>
+            </ItemContent>
+            <Placeholder>
+                <div class="hsk">
+                    <div class="inner">
+                        <span class="b b1"></span>
+                        <span class="b b2"></span>
+                        <span class="b b3"></span>
+                        <span class="b b4"></span>
+                    </div>
+                </div>
+            </Placeholder>
+        </BlazorVirtualize>
+    </div>
+</section>
+
+@code {
+    private BlazorVirtualize<int>? _tiles;
+    private int _target;
+    private readonly Random _rnd = new();
+
+    private readonly int[] _numbers = Enumerable.Range(0, 100_000).ToArray();
+    private readonly int[] _gallery = Enumerable.Range(0, 8_000).ToArray();
+    private List<Category> _chips = default!;
+
+    private const int LazyTotal = 200_000;
+    private static readonly string[] First = { "Ava", "Liam", "Noah", "Mia", "Zoe", "Eli", "Aria", "Leo", "Ivy", "Kai" };
+    private static readonly string[] Last = { "Stone", "Vance", "Hale", "Reed", "Cross", "Lane", "Frost", "Wells" };
+
+    private static readonly (string A, string B)[] Pairs =
+    {
+        ("#6366f1", "#06b6d4"), ("#ec4899", "#f59e0b"), ("#10b981", "#0ea5e9"),
+        ("#8b5cf6", "#ec4899"), ("#f43f5e", "#f59e0b"), ("#0ea5e9", "#22d3ee"),
+    };
+    private static readonly string[] Glyphs = { "🎬", "🎵", "📷", "🎮", "📚", "🚀", "🌆", "🎨" };
+    private static readonly string[] Words = { "Travel", "Music", "Coding", "Design", "Photography", "Gaming", "Science", "Cooking", "Fitness", "Architecture", "Astronomy", "Gardening", "Cinema", "Literature" };
+
+    protected override void OnInitialized()
+    {
+        var rnd = new Random(7);
+        _chips = Enumerable.Range(0, 3_000).Select(i =>
+        {
+            var name = Words[i % Words.Length] + (i >= Words.Length ? $" {i / Words.Length + 1}" : "");
+            return new Category(i, name, rnd.Next(3, 9000));
+        }).ToList();
+    }
+
+    private static string Gradient(int i)
+    {
+        var p = Pairs[i % Pairs.Length];
+        return $"linear-gradient(135deg,{p.A},{p.B})";
+    }
+    private static string Glyph(int i) => Glyphs[i % Glyphs.Length];
+    private static string Title(int i) => $"{Words[i % Words.Length]} #{i % 500 + 1}";
+
+    private async Task ScrollTiles()
+    {
+        if (_tiles is not null)
+            await _tiles.ScrollToIndexAsync(_target, BlazorVirtualizeScrollAlignment.Center, smooth: true);
+    }
+
+    private async Task ScrollTilesRandom()
+    {
+        _target = _rnd.Next(0, _numbers.Length);
+        await ScrollTiles();
+    }
+
+    private async ValueTask<BlazorVirtualizeItemsProviderResult<Tile>> LoadTiles(BlazorVirtualizeItemsProviderRequest request)
+    {
+        await Task.Delay(250, request.CancellationToken);
+        var items = Enumerable
+            .Range(request.StartIndex, Math.Min(request.Count, LazyTotal - request.StartIndex))
+            .Select(i =>
+            {
+                var name = $"{First[i % First.Length]} {Last[(i / First.Length) % Last.Length]}";
+                return new Tile(i, name, string.Concat(name.Split(' ').Select(p => p[0])), DateTime.Now.ToString("HH:mm:ss"));
+            })
+            .ToList();
+        return new BlazorVirtualizeItemsProviderResult<Tile>(items, LazyTotal);
+    }
+
+    public record Category(int Id, string Name, int Count);
+    public record Tile(int Id, string Name, string Initials, string LoadedAt);
+}

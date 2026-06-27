@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>BlazorVirtualization</RootNamespace>
+    <AssemblyName>BlazorVirtualize</AssemblyName>
+    <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- NuGet metadata -->
+    <PackageId>BlazorVirtualize</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>BlazorVirtualize</Authors>
+    <Description>A full-featured, native virtualization component for Blazor supporting fixed and dynamic item sizes, both orientations, lazy data loading, and scroll anchoring.</Description>
+    <PackageTags>blazor;virtualize;virtual-scroll;windowing;performance</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BlazorVirtualize.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

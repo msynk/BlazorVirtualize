@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/BlazorVirtualize.Sample/BlazorVirtualize.Sample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/BlazorVirtualize/BlazorVirtualize.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/BlazorVirtualize.Tests/BlazorVirtualize.Tests.csproj" />
+  </Folder>
+</Solution>
