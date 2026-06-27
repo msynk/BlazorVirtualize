@@ -1,4 +1,4 @@
-using BlazorVirtualization.Internal;
+using BlazorVirtualize.Internal;
 using Xunit;
 
 namespace BlazorVirtualize.Tests;

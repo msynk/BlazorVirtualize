@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <RootNamespace>BlazorVirtualization</RootNamespace>
+    <RootNamespace>BlazorVirtualize</RootNamespace>
     <AssemblyName>BlazorVirtualize</AssemblyName>
     <AddRazorSupportForMvc>false</AddRazorSupportForMvc>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

@@ -1,4 +1,4 @@
-namespace BlazorVirtualization;
+namespace BlazorVirtualize;
 
 /// <summary>
 /// The scroll axis along which the list is virtualized.

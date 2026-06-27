@@ -1,4 +1,4 @@
-namespace BlazorVirtualization;
+namespace BlazorVirtualize;
 
 /// <summary>
 /// A request to an <see cref="BlazorVirtualizeItemsProviderDelegate{TItem}"/> for a window of items.

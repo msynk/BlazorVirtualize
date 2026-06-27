@@ -1,8 +1,8 @@
-using BlazorVirtualization.Internal;
+using BlazorVirtualize.Internal;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
-namespace BlazorVirtualization;
+namespace BlazorVirtualize;
 
 /// <summary>
 /// A high-performance virtualization (windowing) component that renders only the items

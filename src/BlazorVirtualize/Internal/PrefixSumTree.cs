@@ -1,4 +1,4 @@
-namespace BlazorVirtualization.Internal;
+namespace BlazorVirtualize.Internal;
 
 /// <summary>
 /// A Fenwick (binary indexed) tree specialised for virtual scrolling.

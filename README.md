@@ -8,10 +8,10 @@ Unlike the built-in `<Virtualize>`, this component supports **dynamically measur
 sizes** with **scroll anchoring**, **horizontal** orientation, and exposes a small
 imperative API (`ScrollToIndexAsync`, `RefreshDataAsync`).
 
-> **Naming:** the component type is `BlazorVirtualize`. To avoid a type-vs-namespace
-> collision, the library's code lives in the **`BlazorVirtualization`** namespace, while
-> the assembly/package (and therefore the static-asset path `_content/BlazorVirtualize/`)
-> stays `BlazorVirtualize`. Every public type is prefixed with `BlazorVirtualize`.
+> **Naming:** the component type is `BlazorVirtualize`, and the library's code lives in
+> the matching **`BlazorVirtualize`** namespace. The assembly/package (and therefore the
+> static-asset path `_content/BlazorVirtualize/`) is also `BlazorVirtualize`. Every public
+> type is prefixed with `BlazorVirtualize`.
 
 ## Features
 
@@ -160,7 +160,7 @@ rendered it is measured and the layout corrects itself without a visible jump.
 
 ## Public types
 
-All public types are prefixed with `BlazorVirtualize` and live in the `BlazorVirtualization` namespace:
+All public types are prefixed with `BlazorVirtualize` and live in the `BlazorVirtualize` namespace:
 
 - `BlazorVirtualize<TItem>` - the component.
 - `BlazorVirtualizeSizeMode`, `BlazorVirtualizeOrientation`, `BlazorVirtualizeScrollAlignment` - enums.
