@@ -1,4 +1,4 @@
-using BlazorVirtualize.Sample.Components;
+using BlazorVirtualize.Demo.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

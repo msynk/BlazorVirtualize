@@ -174,7 +174,7 @@ src/BlazorVirtualize/                  The component library (Razor Class Librar
   BlazorVirtualize.razor(.cs/.css)     Component markup, logic, scoped styles
   Internal/PrefixSumTree.cs            Fenwick tree (BlazorVirtualizePrefixSumTree)
   wwwroot/virtualize.js                Scroll/measure/scroll-anchor engine
-src/BlazorVirtualize.Sample            Runnable demos (fixed, dynamic, provider, horizontal)
+src/BlazorVirtualize.Demo              Runnable demos (fixed, dynamic, provider, horizontal)
 src/BlazorVirtualize.Tests             Unit tests for the core algorithm
 ```
 
@@ -183,5 +183,5 @@ src/BlazorVirtualize.Tests             Unit tests for the core algorithm
 ```bash
 dotnet build
 dotnet test
-dotnet run --project src/BlazorVirtualize.Sample
+dotnet run --project src/BlazorVirtualize.Demo
 ```
