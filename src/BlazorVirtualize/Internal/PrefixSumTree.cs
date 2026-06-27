@@ -7,8 +7,8 @@ namespace BlazorVirtualization.Internal;
 /// questions that virtualization needs on every scroll frame, both in O(log n):
 /// </para>
 /// <list type="bullet">
-///   <item><see cref="PrefixSum"/> — the cumulative offset of an item (sum of all sizes before it).</item>
-///   <item><see cref="FindIndex"/> — the index of the item that occupies a given scroll offset.</item>
+///   <item><see cref="PrefixSum"/> - the cumulative offset of an item (sum of all sizes before it).</item>
+///   <item><see cref="FindIndex"/> - the index of the item that occupies a given scroll offset.</item>
 /// </list>
 /// Sizes can be updated individually in O(log n) as items are measured, which keeps
 /// dynamic-size virtualization cheap even for very large lists.

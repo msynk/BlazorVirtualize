@@ -1,7 +1,7 @@
 # BlazorVirtualize
 
 A full-featured, **native** virtualization (windowing) component for Blazor. It renders
-only the items currently visible in the scroll viewport — plus a small overscan buffer —
+only the items currently visible in the scroll viewport - plus a small overscan buffer -
 so a list of one million rows keeps the same constant number of DOM nodes as a list of ten.
 
 Unlike the built-in `<Virtualize>`, this component supports **dynamically measured item
@@ -55,7 +55,7 @@ observation + scrolling).
 ## Installation
 
 Reference the `BlazorVirtualize` project (or package), then import the namespace. The JS and
-CSS assets are bundled as static web assets — no manual `<script>`/`<link>` tags required
+CSS assets are bundled as static web assets - no manual `<script>`/`<link>` tags required
 (scoped CSS is included via `<App>.styles.css`, and the JS module is imported on demand).
 
 ```razor
@@ -141,19 +141,19 @@ rendered it is measured and the layout corrects itself without a visible jump.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `ItemContent` *(required)* | `RenderFragment<TItem>` | — | Template for each item. |
-| `Items` | `ICollection<TItem>?` | — | In-memory data source. |
-| `ItemsProvider` | `BlazorVirtualizeItemsProviderDelegate<TItem>?` | — | Lazy data source. Mutually exclusive with `Items`. |
-| `Placeholder` | `RenderFragment<BlazorVirtualizePlaceholderContext>?` | — | Shown while a provider item loads. |
-| `EmptyContent` | `RenderFragment?` | — | Shown when there are no items. |
-| `LoadingContent` | `RenderFragment?` | — | Shown before the first load completes. |
+| `ItemContent` *(required)* | `RenderFragment<TItem>` | - | Template for each item. |
+| `Items` | `ICollection<TItem>?` | - | In-memory data source. |
+| `ItemsProvider` | `BlazorVirtualizeItemsProviderDelegate<TItem>?` | - | Lazy data source. Mutually exclusive with `Items`. |
+| `Placeholder` | `RenderFragment<BlazorVirtualizePlaceholderContext>?` | - | Shown while a provider item loads. |
+| `EmptyContent` | `RenderFragment?` | - | Shown when there are no items. |
+| `LoadingContent` | `RenderFragment?` | - | Shown before the first load completes. |
 | `SizeMode` | `BlazorVirtualizeSizeMode` | `Fixed` | `Fixed` or `Dynamic`. |
 | `ItemSize` | `float` | `50` | Item size (px) in `Fixed` mode. |
 | `EstimatedItemSize` | `float` | `50` | Assumed size (px) for unmeasured items in `Dynamic` mode. |
 | `Orientation` | `BlazorVirtualizeOrientation` | `Vertical` | `Vertical` or `Horizontal`. |
 | `OverscanCount` | `int` | `3` | Extra items rendered on each side of the viewport. |
-| `OnVisibleRangeChanged` | `EventCallback<(int,int)>` | — | Raised when the visible index range changes. |
-| *(unmatched)* | attributes | — | Forwarded to the scroll viewport (e.g. `style`, `class`). |
+| `OnVisibleRangeChanged` | `EventCallback<(int,int)>` | - | Raised when the visible index range changes. |
+| *(unmatched)* | attributes | - | Forwarded to the scroll viewport (e.g. `style`, `class`). |
 
 > The viewport needs an explicit size along the scroll axis (e.g. `style="height:500px"`
 > for vertical). The component sets `overflow:auto` itself.
@@ -162,10 +162,10 @@ rendered it is measured and the layout corrects itself without a visible jump.
 
 All public types are prefixed with `BlazorVirtualize` and live in the `BlazorVirtualization` namespace:
 
-- `BlazorVirtualize<TItem>` — the component.
-- `BlazorVirtualizeSizeMode`, `BlazorVirtualizeOrientation`, `BlazorVirtualizeScrollAlignment` — enums.
-- `BlazorVirtualizeItemsProviderDelegate<TItem>`, `BlazorVirtualizeItemsProviderRequest`, `BlazorVirtualizeItemsProviderResult<TItem>` — lazy-loading API.
-- `BlazorVirtualizePlaceholderContext` — placeholder template context.
+- `BlazorVirtualize<TItem>` - the component.
+- `BlazorVirtualizeSizeMode`, `BlazorVirtualizeOrientation`, `BlazorVirtualizeScrollAlignment` - enums.
+- `BlazorVirtualizeItemsProviderDelegate<TItem>`, `BlazorVirtualizeItemsProviderRequest`, `BlazorVirtualizeItemsProviderResult<TItem>` - lazy-loading API.
+- `BlazorVirtualizePlaceholderContext` - placeholder template context.
 
 ## Project layout
 
