@@ -1,0 +1,156 @@
+@page "/chat"
+@rendermode InteractiveServer
+
+<PageTitle>Chat / reverse - BlazorVirtualize</PageTitle>
+
+<div class="page-head">
+    <span class="eyebrow">Reverse / chat mode</span>
+    <h1>Bottom-anchored conversations</h1>
+    <p>With <code>Reverse</code> the list starts at the newest message and stays pinned to the bottom as you send more - even while dynamic heights settle. Scroll up and <code>OnStartReached</code> lazily prepends older history while the viewport stays exactly where it was.</p>
+</div>
+
+<DemoSource Page="ChatDemo" />
+
+<div class="stage chat-stage">
+    <div class="stage-bar">
+        <span class="traffic"><i></i><i></i><i></i></span>
+        <span>@_messages.Count.ToString("N0") messages · Reverse + OnStartReached + Dynamic size</span>
+        @if (_loadingHistory)
+        {
+            <span class="spacer"></span><span class="hist">loading history…</span>
+        }
+    </div>
+    <BlazorVirtualize @ref="_list" TItem="Msg" Items="_messages"
+                      Reverse="true"
+                      SizeMode="BlazorVirtualizeSizeMode.Dynamic" EstimatedItemSize="64"
+                      OnStartReached="LoadHistoryAsync" ReachedThreshold="3"
+                      AriaLabel="Conversation"
+                      class="vlist chat-list" style="height:460px;">
+        <ItemContent>
+            <div class="msg @(context.Mine ? "mine" : null)">
+                <div class="bubble">
+                    @if (!context.Mine)
+                    {
+                        <span class="from">@context.From</span>
+                    }
+                    <span class="text">@context.Text</span>
+                    <span class="time">@context.Time</span>
+                </div>
+            </div>
+        </ItemContent>
+    </BlazorVirtualize>
+    <div class="composer">
+        <input @bind="_draft" @bind:event="oninput" @onkeydown="OnKey" placeholder="Write a message…" aria-label="Message" />
+        <button class="btn" @onclick="SendAsync" disabled="@string.IsNullOrWhiteSpace(_draft)">Send</button>
+    </div>
+</div>
+
+@code {
+    private BlazorVirtualize<Msg>? _list;
+    private List<Msg> _messages = new();
+    private string _draft = string.Empty;
+    private bool _loadingHistory;
+    private int _historyRemaining = 400;
+
+    private static readonly string[] Friends = { "Ava", "Liam", "Mia", "Noah" };
+    private static readonly string[] Lines =
+    {
+        "Hey! Did you get a chance to look at the PR?",
+        "Yep, virtualization is buttery smooth now 🚀",
+        "The scroll anchoring fix is chef's kiss.",
+        "Pushing a couple more demos tonight.",
+        "Nice — the chat one is bottom-anchored, right?",
+        "Exactly, and it loads history when you scroll up.",
+        "Love it. Ship it.",
+        "Adding sticky group headers next.",
+        "What about accessibility?",
+        "ARIA roles and keyboard scrolling are in too.",
+    };
+
+    protected override void OnInitialized()
+    {
+        var rnd = new Random(3);
+        var seed = new List<Msg>();
+        for (int i = 0; i < 24; i++)
+        {
+            bool mine = rnd.Next(2) == 0;
+            seed.Add(new Msg(
+                Mine: mine,
+                From: mine ? "You" : Friends[rnd.Next(Friends.Length)],
+                Text: Lines[i % Lines.Length],
+                Time: $"{9 + i / 6}:{(i * 7) % 60:00}"));
+        }
+        _messages = seed;
+    }
+
+    private async Task OnKey(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendAsync();
+        }
+    }
+
+    private async Task SendAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_draft))
+        {
+            return;
+        }
+        _messages.Add(new Msg(true, "You", _draft.Trim(), DateTime.Now.ToString("H:mm")));
+        _draft = string.Empty;
+
+        if (_list is not null)
+        {
+            await _list.RefreshDataAsync(); // Reverse mode keeps us pinned to the bottom
+        }
+
+        // Simulate a reply.
+        _ = ReplyAsync();
+    }
+
+    private async Task ReplyAsync()
+    {
+        await Task.Delay(900);
+        var rnd = new Random();
+        _messages.Add(new Msg(false, Friends[rnd.Next(Friends.Length)], Lines[rnd.Next(Lines.Length)], DateTime.Now.ToString("H:mm")));
+        await InvokeAsync(async () =>
+        {
+            if (_list is not null)
+            {
+                await _list.RefreshDataAsync();
+            }
+        });
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        if (_loadingHistory || _historyRemaining <= 0)
+        {
+            return;
+        }
+        _loadingHistory = true;
+        StateHasChanged();
+
+        await Task.Delay(600); // simulate fetching older messages
+
+        var rnd = new Random(_historyRemaining);
+        int batch = Math.Min(20, _historyRemaining);
+        var older = new List<Msg>(batch);
+        for (int i = 0; i < batch; i++)
+        {
+            bool mine = rnd.Next(2) == 0;
+            older.Add(new Msg(mine, mine ? "You" : Friends[rnd.Next(Friends.Length)], Lines[rnd.Next(Lines.Length)], "earlier"));
+        }
+        _messages.InsertRange(0, older); // prepend history
+        _historyRemaining -= batch;
+        _loadingHistory = false;
+
+        if (_list is not null)
+        {
+            await _list.RefreshDataAsync(); // Reverse mode preserves the scroll position
+        }
+    }
+
+    public record Msg(bool Mine, string From, string Text, string Time);
+}

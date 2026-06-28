@@ -260,7 +260,7 @@ a:hover { text-decoration: underline; }
 }
 
 /* ===== Horizontal rails ===== */
-.rail { margin-bottom: 1.75rem; }
+.rail { margin-bottom: 3rem; }
 .rail-head { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .6rem; }
 .rail-head h2 { margin: 0; font-size: 1.1rem; letter-spacing: -.3px; }
 .rail-head .hint { font-size: .82rem; color: var(--text-muted); }
@@ -375,3 +375,70 @@ a:hover { text-decoration: underline; }
 .source-code::-webkit-scrollbar-track { background: #0f172a; }
 .source-code::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; border: 2px solid #0f172a; }
 .source-code::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* ===== Grouped / sticky headers ===== */
+.group-head {
+    display: flex; align-items: center;
+    height: 38px; padding: 0 1.1rem;
+    font-size: .8rem; font-weight: 800; letter-spacing: .5px; text-transform: uppercase;
+    color: var(--primary-dark); background: #eef2ff;
+    border-bottom: 1px solid var(--border);
+}
+.group-head.pinned {
+    /* opaque so rows scrolling underneath don't show through the pinned header */
+    background: #e6eaff;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, .08);
+}
+.contact { display: flex; align-items: center; gap: .9rem; padding: .7rem 1.1rem; border-bottom: 1px solid #f1f5f9; }
+.contact:hover { background: #f8faff; }
+.contact .avatar { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .82rem; }
+.contact .who { display: flex; flex-direction: column; min-width: 0; }
+.contact .who .name { font-weight: 600; font-size: .92rem; }
+.contact .who .sub { font-size: .78rem; color: var(--text-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ===== Infinite scroll ===== */
+.feed-row { display: flex; align-items: center; gap: .9rem; height: 100%; padding: 0 1.1rem; border-bottom: 1px solid #f1f5f9; }
+.feed-row:hover { background: #f8faff; }
+.feed-row .avatar { width: 36px; height: 36px; border-radius: 11px; flex: none; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .8rem; }
+.feed-row .who { display: flex; flex-direction: column; min-width: 0; }
+.feed-row .who .name { font-weight: 600; font-size: .92rem; }
+.feed-row .who .sub { font-size: .8rem; color: var(--text-muted); }
+.feed-row .idx { margin-left: auto; font-size: .76rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+.loadbar {
+    display: flex; align-items: center; justify-content: center; gap: .55rem;
+    margin-top: .9rem; padding: .7rem 1rem; font-size: .86rem; color: var(--text-muted);
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.spin {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid #c7d2fe; border-top-color: var(--primary-dark);
+    display: inline-block; animation: bv-spin .7s linear infinite;
+}
+@keyframes bv-spin { to { transform: rotate(360deg); } }
+
+/* ===== Chat / reverse ===== */
+.chat-stage { display: flex; flex-direction: column; }
+.chat-list { background: #f8fafc; }
+.stage-bar .hist { font-size: .78rem; color: var(--primary-dark); font-weight: 600; }
+
+.msg { display: flex; padding: .25rem 1rem; }
+.msg.mine { justify-content: flex-end; }
+.msg .bubble {
+    max-width: 72%; padding: .55rem .8rem; border-radius: 14px;
+    background: #fff; border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: .15rem;
+}
+.msg.mine .bubble { background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; color: #fff; }
+.msg .from { font-size: .74rem; font-weight: 700; color: var(--primary-dark); }
+.msg .text { font-size: .9rem; line-height: 1.45; }
+.msg .time { font-size: .68rem; opacity: .7; align-self: flex-end; }
+.msg.mine .time { color: #e0e7ff; }
+
+.composer { display: flex; gap: .6rem; padding: .8rem; border-top: 1px solid var(--border); background: var(--surface); }
+.composer input {
+    flex: 1; padding: .6rem .85rem; border: 1px solid var(--border); border-radius: 999px;
+    font-size: .92rem; background: var(--surface-2); outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.composer input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,.18); background: #fff; }
+.composer .btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }

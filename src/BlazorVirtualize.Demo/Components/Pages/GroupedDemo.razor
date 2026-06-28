@@ -1,0 +1,78 @@
+@page "/grouped"
+@rendermode InteractiveServer
+
+<PageTitle>Sticky headers - BlazorVirtualize</PageTitle>
+
+<div class="page-head">
+    <span class="eyebrow">Sticky group headers</span>
+    <h1>Grouped lists with pinned headers</h1>
+    <p>Contacts are grouped A–Z. The header of the current group stays pinned to the top of the viewport and is gently pushed out by the next group as it arrives - exactly like the contacts app on your phone. Group headers and rows have different heights, so the list also runs in dynamic measurement mode.</p>
+</div>
+
+<DemoSource Page="GroupedDemo" />
+
+<div class="stage">
+    <div class="stage-bar">
+        <span class="traffic"><i></i><i></i><i></i></span>
+        <span>@_contactCount.ToString("N0") contacts · 26 groups · IsStickyItem + Dynamic size</span>
+    </div>
+    <BlazorVirtualize TItem="Row" Items="_rows"
+                      SizeMode="BlazorVirtualizeSizeMode.Dynamic" EstimatedItemSize="64"
+                      IsStickyItem="r => r.IsHeader"
+                      AriaLabel="Contacts"
+                      class="vlist" style="height:560px;">
+        <ItemContent>
+            @if (context.IsHeader)
+            {
+                <div class="group-head">@context.Title</div>
+            }
+            else
+            {
+                <div class="contact">
+                    <span class="avatar" style="background:@context.Color">@context.Initials</span>
+                    <span class="who">
+                        <span class="name">@context.Name</span>
+                        <span class="sub">@context.Email</span>
+                    </span>
+                </div>
+            }
+        </ItemContent>
+        <StickyHeaderContent>
+            <div class="group-head pinned">@context.Title</div>
+        </StickyHeaderContent>
+    </BlazorVirtualize>
+</div>
+
+@code {
+    private List<Row> _rows = default!;
+    private int _contactCount;
+
+    private static readonly string[] Suffix = { "iden", "va", "elle", "ason", "ora", "ux", "ia", "an", "ek", "yla", "ian", "ette" };
+    private static readonly string[] Last = { "Stone", "Vance", "Hale", "Reed", "Cross", "Lane", "Frost", "Wells", "Park", "Quinn", "Vega", "Ford" };
+    private static readonly string[] Hues = { "#6366f1", "#06b6d4", "#ec4899", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444", "#0ea5e9" };
+
+    protected override void OnInitialized()
+    {
+        var rnd = new Random(11);
+        _rows = new List<Row>();
+        for (char c = 'A'; c <= 'Z'; c++)
+        {
+            _rows.Add(Row.Header(c.ToString()));
+            int n = rnd.Next(20, 60);
+            for (int i = 0; i < n; i++)
+            {
+                var first = c + Suffix[rnd.Next(Suffix.Length)];
+                var last = Last[rnd.Next(Last.Length)];
+                var name = $"{first} {last}";
+                _rows.Add(Row.Contact(name, $"{first.ToLowerInvariant()}.{last.ToLowerInvariant()}@example.com", $"{first[0]}{last[0]}", Hues[_rows.Count % Hues.Length]));
+                _contactCount++;
+            }
+        }
+    }
+
+    public record Row(bool IsHeader, string Title, string Name, string Email, string Initials, string Color)
+    {
+        public static Row Header(string title) => new(true, title, "", "", "", "");
+        public static Row Contact(string name, string email, string initials, string color) => new(false, "", name, email, initials, color);
+    }
+}

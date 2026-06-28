@@ -3,6 +3,9 @@
 
 <div @ref="_viewport"
      class="@CssClass"
+     role="@AriaRole"
+     aria-label="@AriaLabel"
+     tabindex="0"
      @attributes="SplatAttributes">
 
     @if (!_initialized && LoadingContent is not null && _itemCount == 0)
@@ -23,7 +26,8 @@
             {
                 var index = i;
                 var offset = GetItemOffset(index);
-                <div class="bv-item" data-bv-index="@index" style="@ItemStyle(offset)" @key="index">
+                <div class="bv-item" role="listitem" aria-setsize="@_itemCount" aria-posinset="@(index + 1)"
+                     data-bv-index="@index" style="@ItemStyle(offset)" @key="index">
                     @if (TryGetItem(index, out var item))
                     {
                         @ItemContent(item)
@@ -32,6 +36,13 @@
                     {
                         @Placeholder(new BlazorVirtualizePlaceholderContext(index, GetItemSize(index)))
                     }
+                </div>
+            }
+
+            @if (_stickyActiveIndex >= 0 && TryGetItem(_stickyActiveIndex, out var stickyItem))
+            {
+                <div class="bv-sticky" role="presentation" style="@StickyStyle()">
+                    @((StickyHeaderContent ?? ItemContent)(stickyItem))
                 </div>
             }
         </div>
@@ -55,6 +66,18 @@
             return $"transform:translateX({o}px);{w}";
         }
 
+        var h = Dynamic ? string.Empty : $"height:{ItemSize.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;";
+        return $"transform:translateY({o}px);{h}";
+    }
+
+    private string StickyStyle()
+    {
+        var o = _stickyOffset.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+        if (Horizontal)
+        {
+            var w = Dynamic ? string.Empty : $"width:{ItemSize.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;";
+            return $"transform:translateX({o}px);{w}";
+        }
         var h = Dynamic ? string.Empty : $"height:{ItemSize.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}px;";
         return $"transform:translateY({o}px);{h}";
     }

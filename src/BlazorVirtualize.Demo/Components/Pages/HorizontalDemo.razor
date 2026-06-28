@@ -9,18 +9,18 @@
     <p>The same engine, oriented horizontally. Below are several patterns: fixed-width cards with scroll-to, a poster gallery, variable-width chips measured at runtime, and a lazy-loaded rail.</p>
 </div>
 
-<DemoSource Page="HorizontalDemo" />
-
 @* ---- Rail 1: fixed-width number tiles with scroll-to ---- *@
+@* region:rail1 *@
 <section class="rail">
     <div class="rail-head">
         <h2>Fixed-width tiles</h2>
         <span class="hint">100,000 cards · 168px each</span>
         <span class="spacer"></span>
-        <input type="number" @bind="_target" min="0" max="99999" style="width:110px;padding:.4rem .6rem;border:1px solid var(--border);border-radius:9px;" />
+        <input type="number" @bind="_t1" min="0" max="99999" style="width:110px;padding:.4rem .6rem;border:1px solid var(--border);border-radius:9px;" />
         <button class="btn" @onclick="ScrollTiles">Scroll to</button>
-        <button class="btn ghost" @onclick="ScrollTilesRandom">Random</button>
+        <button class="btn ghost" @onclick="RandomTiles">Random</button>
     </div>
+    <DemoSource Page="HorizontalDemo" Section="rail1" />
     <div class="stage">
         <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Orientation Horizontal · fixed size</span></div>
         <BlazorVirtualize @ref="_tiles" TItem="int" Items="_numbers" ItemSize="168"
@@ -37,16 +37,23 @@
         </BlazorVirtualize>
     </div>
 </section>
+@* endregion *@
 
 @* ---- Rail 2: poster / media gallery ---- *@
+@* region:rail2 *@
 <section class="rail">
     <div class="rail-head">
         <h2>Media gallery</h2>
         <span class="hint">8,000 posters · taller fixed cards</span>
+        <span class="spacer"></span>
+        <input type="number" @bind="_t2" min="0" max="7999" style="width:110px;padding:.4rem .6rem;border:1px solid var(--border);border-radius:9px;" />
+        <button class="btn" @onclick="ScrollGallery">Scroll to</button>
+        <button class="btn ghost" @onclick="RandomGallery">Random</button>
     </div>
+    <DemoSource Page="HorizontalDemo" Section="rail2" />
     <div class="stage">
         <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Carousel-style rail</span></div>
-        <BlazorVirtualize TItem="int" Items="_gallery" ItemSize="168"
+        <BlazorVirtualize @ref="_galleryList" TItem="int" Items="_gallery" ItemSize="168"
                           Orientation="BlazorVirtualizeOrientation.Horizontal"
                           class="vlist" style="height:210px;">
             <ItemContent>
@@ -61,16 +68,23 @@
         </BlazorVirtualize>
     </div>
 </section>
+@* endregion *@
 
 @* ---- Rail 3: variable-width chips (dynamic horizontal sizing) ---- *@
+@* region:rail3 *@
 <section class="rail">
     <div class="rail-head">
         <h2>Variable-width chips</h2>
         <span class="hint">Dynamic mode - each chip is measured, width follows its text</span>
+        <span class="spacer"></span>
+        <input type="number" @bind="_t3" min="0" max="2999" style="width:110px;padding:.4rem .6rem;border:1px solid var(--border);border-radius:9px;" />
+        <button class="btn" @onclick="ScrollChips">Scroll to</button>
+        <button class="btn ghost" @onclick="RandomChips">Random</button>
     </div>
+    <DemoSource Page="HorizontalDemo" Section="rail3" />
     <div class="stage">
         <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Horizontal + SizeMode.Dynamic · X-axis scroll anchoring</span></div>
-        <BlazorVirtualize TItem="Category" Items="_chips"
+        <BlazorVirtualize @ref="_chipsList" TItem="Category" Items="_chips"
                           Orientation="BlazorVirtualizeOrientation.Horizontal"
                           SizeMode="BlazorVirtualizeSizeMode.Dynamic" EstimatedItemSize="140"
                           class="vlist" style="height:70px;">
@@ -84,16 +98,23 @@
         </BlazorVirtualize>
     </div>
 </section>
+@* endregion *@
 
 @* ---- Rail 4: lazy-loaded horizontal rail ---- *@
+@* region:rail4 *@
 <section class="rail">
     <div class="rail-head">
         <h2>Lazy loaded</h2>
         <span class="hint">200,000 items fetched on demand with skeletons</span>
+        <span class="spacer"></span>
+        <input type="number" @bind="_t4" min="0" max="199999" style="width:110px;padding:.4rem .6rem;border:1px solid var(--border);border-radius:9px;" />
+        <button class="btn" @onclick="ScrollLazy">Scroll to</button>
+        <button class="btn ghost" @onclick="RandomLazy">Random</button>
     </div>
+    <DemoSource Page="HorizontalDemo" Section="rail4" />
     <div class="stage">
         <div class="stage-bar"><span class="traffic"><i></i><i></i><i></i></span><span>Horizontal + ItemsProvider</span></div>
-        <BlazorVirtualize TItem="Tile" ItemsProvider="LoadTiles" ItemSize="160"
+        <BlazorVirtualize @ref="_lazyList" TItem="Tile" ItemsProvider="LoadTiles" ItemSize="160"
                           Orientation="BlazorVirtualizeOrientation.Horizontal"
                           class="vlist" style="height:140px;">
             <ItemContent>
@@ -118,10 +139,15 @@
         </BlazorVirtualize>
     </div>
 </section>
+@* endregion *@
 
 @code {
     private BlazorVirtualize<int>? _tiles;
-    private int _target;
+    private BlazorVirtualize<int>? _galleryList;
+    private BlazorVirtualize<Category>? _chipsList;
+    private BlazorVirtualize<Tile>? _lazyList;
+
+    private int _t1, _t2, _t3, _t4;
     private readonly Random _rnd = new();
 
     private readonly int[] _numbers = Enumerable.Range(0, 100_000).ToArray();
@@ -158,17 +184,26 @@
     private static string Glyph(int i) => Glyphs[i % Glyphs.Length];
     private static string Title(int i) => $"{Words[i % Words.Length]} #{i % 500 + 1}";
 
-    private async Task ScrollTiles()
+    // Shared scroll helper used by every rail.
+    private static async Task ScrollToAsync<T>(BlazorVirtualize<T>? list, int index)
     {
-        if (_tiles is not null)
-            await _tiles.ScrollToIndexAsync(_target, BlazorVirtualizeScrollAlignment.Center, smooth: true);
+        if (list is not null)
+        {
+            await list.ScrollToIndexAsync(index, BlazorVirtualizeScrollAlignment.Center, smooth: true);
+        }
     }
 
-    private async Task ScrollTilesRandom()
-    {
-        _target = _rnd.Next(0, _numbers.Length);
-        await ScrollTiles();
-    }
+    private Task ScrollTiles() => ScrollToAsync(_tiles, _t1);
+    private Task RandomTiles() { _t1 = _rnd.Next(0, _numbers.Length); return ScrollToAsync(_tiles, _t1); }
+
+    private Task ScrollGallery() => ScrollToAsync(_galleryList, _t2);
+    private Task RandomGallery() { _t2 = _rnd.Next(0, _gallery.Length); return ScrollToAsync(_galleryList, _t2); }
+
+    private Task ScrollChips() => ScrollToAsync(_chipsList, _t3);
+    private Task RandomChips() { _t3 = _rnd.Next(0, _chips.Count); return ScrollToAsync(_chipsList, _t3); }
+
+    private Task ScrollLazy() => ScrollToAsync(_lazyList, _t4);
+    private Task RandomLazy() { _t4 = _rnd.Next(0, LazyTotal); return ScrollToAsync(_lazyList, _t4); }
 
     private async ValueTask<BlazorVirtualizeItemsProviderResult<Tile>> LoadTiles(BlazorVirtualizeItemsProviderRequest request)
     {

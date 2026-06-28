@@ -1,0 +1,97 @@
+@page "/infinite"
+@rendermode InteractiveServer
+
+<PageTitle>Infinite scroll - BlazorVirtualize</PageTitle>
+
+<div class="page-head">
+    <span class="eyebrow">Infinite scroll</span>
+    <h1>Load more as you reach the end</h1>
+    <p>This feed has no known total. The <code>OnEndReached</code> callback fires when the last rows come within <code>ReachedThreshold</code> of the viewport, appending the next batch. Keep scrolling and the list keeps growing until the source is exhausted.</p>
+</div>
+
+<DemoSource Page="InfiniteDemo" />
+
+<div class="stage">
+    <div class="stage-bar">
+        <span class="traffic"><i></i><i></i><i></i></span>
+        <span>@_items.Count.ToString("N0") loaded@(_items.Count >= Max ? " · all caught up" : "") · OnEndReached + ReachedThreshold 6</span>
+    </div>
+    <BlazorVirtualize @ref="_list" TItem="Item" Items="_items" ItemSize="68"
+                      OnEndReached="LoadMoreAsync" ReachedThreshold="6"
+                      AriaLabel="Activity feed"
+                      class="vlist" style="height:520px;">
+        <ItemContent>
+            <div class="feed-row">
+                <span class="avatar" style="background:@context.Color">@context.Initials</span>
+                <span class="who">
+                    <span class="name">@context.Name</span>
+                    <span class="sub">@context.Action</span>
+                </span>
+                <span class="idx">#@context.Id.ToString("N0")</span>
+            </div>
+        </ItemContent>
+    </BlazorVirtualize>
+</div>
+
+<div class="loadbar">
+    @if (_loading)
+    {
+        <span class="spin"></span> <span>Loading more…</span>
+    }
+    else if (_items.Count >= Max)
+    {
+        <span>🎉 You've reached the end (@Max.ToString("N0") items).</span>
+    }
+    else
+    {
+        <span>Scroll down to load more.</span>
+    }
+</div>
+
+@code {
+    private BlazorVirtualize<Item>? _list;
+    private readonly List<Item> _items = new();
+    private bool _loading;
+    private const int Max = 1000;
+    private const int Batch = 25;
+
+    private static readonly string[] First = { "Ava", "Liam", "Noah", "Mia", "Zoe", "Eli", "Aria", "Leo", "Ivy", "Kai" };
+    private static readonly string[] Last = { "Stone", "Vance", "Hale", "Reed", "Cross", "Lane", "Frost", "Wells" };
+    private static readonly string[] Actions = { "pushed 3 commits", "opened a pull request", "left a review", "starred a repo", "closed an issue", "deployed to prod", "merged a branch", "commented on a thread" };
+    private static readonly string[] Hues = { "#6366f1", "#06b6d4", "#ec4899", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444", "#0ea5e9" };
+
+    protected override void OnInitialized() => Append(40);
+
+    private async Task LoadMoreAsync()
+    {
+        if (_loading || _items.Count >= Max)
+        {
+            return;
+        }
+        _loading = true;
+        StateHasChanged();
+
+        await Task.Delay(700); // simulate a network fetch
+
+        Append(Batch);
+        _loading = false;
+
+        if (_list is not null)
+        {
+            await _list.RefreshDataAsync();
+        }
+    }
+
+    private void Append(int count)
+    {
+        var rnd = new Random(_items.Count * 31 + 7);
+        for (int i = 0; i < count && _items.Count < Max; i++)
+        {
+            int id = _items.Count;
+            var name = $"{First[rnd.Next(First.Length)]} {Last[rnd.Next(Last.Length)]}";
+            _items.Add(new Item(id, name, string.Concat(name.Split(' ').Select(p => p[0])), Actions[rnd.Next(Actions.Length)], Hues[id % Hues.Length]));
+        }
+    }
+
+    public record Item(int Id, string Name, string Initials, string Action, string Color);
+}

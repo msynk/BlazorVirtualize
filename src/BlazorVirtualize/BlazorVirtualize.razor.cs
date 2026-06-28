@@ -57,6 +57,50 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
     /// <summary>Invoked whenever the rendered (visible) index range changes.</summary>
     [Parameter] public EventCallback<(int Start, int End)> OnVisibleRangeChanged { get; set; }
 
+    /// <summary>
+    /// Invoked when the last item comes within <see cref="ReachedThreshold"/> items of the visible window.
+    /// Use this to append more data for infinite scrolling. Fires once per item-count value.
+    /// </summary>
+    [Parameter] public EventCallback OnEndReached { get; set; }
+
+    /// <summary>
+    /// Invoked when the first item comes within <see cref="ReachedThreshold"/> items of the visible window.
+    /// Use this to prepend older data (for example, loading chat history when scrolling up).
+    /// </summary>
+    [Parameter] public EventCallback OnStartReached { get; set; }
+
+    /// <summary>
+    /// How many items away from an edge the visible window must be before
+    /// <see cref="OnEndReached"/> / <see cref="OnStartReached"/> fire. Defaults to 0.
+    /// </summary>
+    [Parameter] public int ReachedThreshold { get; set; }
+
+    /// <summary>
+    /// When <c>true</c> the list is bottom-anchored: it starts scrolled to the end and
+    /// automatically keeps the newest items in view when data is appended while the user
+    /// is at the bottom. Ideal for chat and log views.
+    /// </summary>
+    [Parameter] public bool Reverse { get; set; }
+
+    /// <summary>
+    /// A predicate marking certain items (for example, group headers) as sticky. The active
+    /// sticky item is pinned to the leading edge of the viewport while its group scrolls.
+    /// Only supported with in-memory <see cref="Items"/>.
+    /// </summary>
+    [Parameter] public Func<TItem, bool>? IsStickyItem { get; set; }
+
+    /// <summary>The template used to render a pinned sticky item. Falls back to <see cref="ItemContent"/> when not set.</summary>
+    [Parameter] public RenderFragment<TItem>? StickyHeaderContent { get; set; }
+
+    /// <summary>The index the list should be scrolled to on first render. Ignored when <see cref="Reverse"/> is set.</summary>
+    [Parameter] public int? InitialIndex { get; set; }
+
+    /// <summary>The ARIA role applied to the scroll viewport. Defaults to <c>list</c>.</summary>
+    [Parameter] public string AriaRole { get; set; } = "list";
+
+    /// <summary>An accessible label for the scroll viewport.</summary>
+    [Parameter] public string? AriaLabel { get; set; }
+
     /// <summary>Additional attributes (such as <c>style</c> or <c>class</c>) applied to the scroll viewport element.</summary>
     [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
@@ -122,6 +166,22 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
     private CancellationTokenSource? _loadCts;
     private bool _refreshPending;
 
+    // Infinite-scroll edge tracking.
+    private int _lastEndReachedCount = -1;
+    private bool _wasAtStart;
+    private bool _wasAtEnd;
+
+    // Sticky (grouped) header tracking.
+    private List<int>? _stickyIndices;   // sorted indices flagged by IsStickyItem (in-memory only)
+    private int _stickyActiveIndex = -1;
+    private double _stickyOffset;
+
+    // Reverse / chat (bottom-anchored) tracking.
+    private bool _pendingScrollToEnd;
+    private double _preserveEndDistance = -1;
+    private bool _initialScrollDone;
+    private bool _stickToEnd;
+
     private bool Horizontal => Orientation == BlazorVirtualizeOrientation.Horizontal;
     private bool Dynamic => SizeMode == BlazorVirtualizeSizeMode.Dynamic;
 
@@ -144,9 +204,28 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
             _itemList = Items as IList<TItem> ?? Items.ToList();
             SetItemCount(_itemList.Count);
             _loadedItems = null;
+            ComputeStickyIndices();
             RecomputeRange();
         }
         // Provider count is discovered on first load.
+    }
+
+    private void ComputeStickyIndices()
+    {
+        if (IsStickyItem is null || _itemList is null)
+        {
+            _stickyIndices = null;
+            return;
+        }
+        var list = new List<int>();
+        for (int i = 0; i < _itemList.Count; i++)
+        {
+            if (IsStickyItem(_itemList[i]))
+            {
+                list.Add(i);
+            }
+        }
+        _stickyIndices = list;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -172,11 +251,58 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
                 _refreshPending = false;
                 await RefreshDataAsync();
             }
+
+            await ApplyInitialScrollAsync();
         }
-        else if (Dynamic && _module is not null && _itemCount > 0)
+        else
         {
-            // Measure any newly rendered items and reconcile observer subscriptions.
-            await _module.InvokeVoidAsync("syncMeasurements", _jsId);
+            if (Dynamic && _module is not null && _itemCount > 0)
+            {
+                // Measure any newly rendered items and reconcile observer subscriptions.
+                await _module.InvokeVoidAsync("syncMeasurements", _jsId);
+            }
+
+            await ApplyPendingScrollAsync();
+        }
+    }
+
+    private async Task ApplyInitialScrollAsync()
+    {
+        if (_initialScrollDone || _module is null || _itemCount == 0)
+        {
+            return;
+        }
+        _initialScrollDone = true;
+
+        if (Reverse)
+        {
+            _stickToEnd = true;
+            await ScrollToEndAsync();
+        }
+        else if (InitialIndex is { } idx)
+        {
+            await ScrollToIndexAsync(idx);
+        }
+    }
+
+    private async Task ApplyPendingScrollAsync()
+    {
+        if (_module is null)
+        {
+            return;
+        }
+
+        if (_pendingScrollToEnd)
+        {
+            _pendingScrollToEnd = false;
+            await ScrollToEndAsync();
+        }
+        else if (_preserveEndDistance >= 0)
+        {
+            // Restore the distance from the end after a prepend so the viewport stays put.
+            double target = Math.Max(0, GetTotalSize() - _viewportSize - _preserveEndDistance);
+            _preserveEndDistance = -1;
+            await _module.InvokeVoidAsync("scrollToOffset", _jsId, target, false);
         }
     }
 
@@ -221,9 +347,29 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
 
         if (Items is not null)
         {
+            bool atEnd = Reverse && (_stickToEnd || IsNearEnd());
+            double prevTotal = GetTotalSize();
+
             _itemList = Items as IList<TItem> ?? Items.ToList();
             SetItemCount(_itemList.Count);
+            ComputeStickyIndices();
             RecomputeRange();
+
+            if (Reverse && GetTotalSize() > prevTotal)
+            {
+                if (atEnd)
+                {
+                    // User was at the bottom: keep newest items in view.
+                    _pendingScrollToEnd = true;
+                }
+                else
+                {
+                    // Content grew (likely prepended history): keep the viewport anchored
+                    // to the same distance from the end so it does not jump.
+                    _preserveEndDistance = prevTotal - (_scrollOffset + _viewportSize);
+                }
+            }
+
             StateHasChanged();
         }
         else if (ItemsProvider is not null)
@@ -342,6 +488,7 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
             int prevStart = _visibleStart, prevEnd = _visibleEnd;
             _visibleStart = _renderStart = 0;
             _visibleEnd = _renderEnd = Math.Min(_itemCount, _initialized ? 0 : EstimateInitialCount());
+            _stickyActiveIndex = -1;
             if (prevStart != _visibleStart || prevEnd != _visibleEnd)
             {
                 _ = NotifyRangeChangedAsync();
@@ -368,10 +515,99 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
         _renderStart = newRenderStart;
         _renderEnd = newRenderEnd;
 
+        UpdateSticky();
+        CheckEdgesReached();
+
         if (rangeChanged)
         {
             _ = NotifyRangeChangedAsync();
         }
+    }
+
+    private void UpdateSticky()
+    {
+        if (_stickyIndices is null || _stickyIndices.Count == 0)
+        {
+            _stickyActiveIndex = -1;
+            return;
+        }
+
+        // Greatest sticky index that starts at or before the first visible item.
+        int active = -1;
+        int lo = 0, hi = _stickyIndices.Count - 1;
+        while (lo <= hi)
+        {
+            int mid = (lo + hi) >> 1;
+            if (_stickyIndices[mid] <= _visibleStart)
+            {
+                active = _stickyIndices[mid];
+                lo = mid + 1;
+            }
+            else
+            {
+                hi = mid - 1;
+            }
+        }
+
+        _stickyActiveIndex = active;
+        if (active < 0)
+        {
+            return;
+        }
+
+        double pinned = _scrollOffset;
+        double headerSize = GetItemSize(active);
+
+        // The next sticky header pushes the current one out as it approaches.
+        int l = 0, h = _stickyIndices.Count - 1, next = -1;
+        while (l <= h)
+        {
+            int mid = (l + h) >> 1;
+            if (_stickyIndices[mid] > active)
+            {
+                next = _stickyIndices[mid];
+                h = mid - 1;
+            }
+            else
+            {
+                l = mid + 1;
+            }
+        }
+        if (next >= 0)
+        {
+            double nextOffset = GetItemOffset(next);
+            if (nextOffset < pinned + headerSize)
+            {
+                pinned -= pinned + headerSize - nextOffset;
+            }
+        }
+
+        _stickyOffset = pinned;
+    }
+
+    private bool IsNearEnd() => GetTotalSize() - (_scrollOffset + _viewportSize) <= 4d;
+
+    private void CheckEdgesReached()
+    {
+        if (_itemCount == 0)
+        {
+            return;
+        }
+
+        bool atEnd = _visibleEnd >= _itemCount - ReachedThreshold;
+        if (OnEndReached.HasDelegate && atEnd && (!_wasAtEnd || _lastEndReachedCount != _itemCount))
+        {
+            _lastEndReachedCount = _itemCount;
+            _ = OnEndReached.InvokeAsync();
+        }
+        _wasAtEnd = atEnd;
+
+        bool atStart = _visibleStart <= ReachedThreshold;
+        if (OnStartReached.HasDelegate && atStart && !_wasAtStart && _initialScrollDone)
+        {
+            _ = OnStartReached.InvokeAsync();
+        }
+        _wasAtStart = atStart;
     }
 
     private Task NotifyRangeChangedAsync() =>
@@ -387,6 +623,11 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
     {
         _scrollOffset = scrollOffset;
         _viewportSize = viewportSize;
+
+        if (Reverse)
+        {
+            _stickToEnd = IsNearEnd();
+        }
 
         int prevRenderStart = _renderStart, prevRenderEnd = _renderEnd;
         RecomputeRange();
@@ -444,6 +685,12 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
 
         RecomputeRange();
         StateHasChanged();
+
+        // In reverse (chat) mode, keep the newest items pinned as measurements settle.
+        if (Reverse && _stickToEnd && _module is not null)
+        {
+            await ScrollToEndAsync();
+        }
     }
 
     // ---- Public API --------------------------------------------------------
@@ -487,6 +734,23 @@ public sealed partial class BlazorVirtualize<TItem> : ComponentBase, IAsyncDispo
         }
         return _scrollOffset; // already visible -> no change
     }
+
+    /// <summary>Scrolls to an absolute pixel offset along the scroll axis.</summary>
+    public async Task ScrollToOffsetAsync(double offset, bool smooth = false)
+    {
+        if (_module is null)
+        {
+            return;
+        }
+        double maxOffset = Math.Max(0, GetTotalSize() - _viewportSize);
+        await _module.InvokeVoidAsync("scrollToOffset", _jsId, Math.Clamp(offset, 0, maxOffset), smooth);
+    }
+
+    /// <summary>Scrolls to the start (top/left) of the list.</summary>
+    public Task ScrollToStartAsync(bool smooth = false) => ScrollToOffsetAsync(0, smooth);
+
+    /// <summary>Scrolls to the end (bottom/right) of the list. Useful for chat and log views.</summary>
+    public Task ScrollToEndAsync(bool smooth = false) => ScrollToOffsetAsync(GetTotalSize(), smooth);
 
     // ---- Cleanup -----------------------------------------------------------
 

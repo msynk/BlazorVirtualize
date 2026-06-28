@@ -30,6 +30,15 @@
             <NavLink class="nav-item" href="provider">
                 <span class="ico">@CloudIcon</span> Lazy loading
             </NavLink>
+            <NavLink class="nav-item" href="infinite">
+                <span class="ico">@InfiniteIcon</span> Infinite scroll
+            </NavLink>
+            <NavLink class="nav-item" href="grouped">
+                <span class="ico">@GroupIcon</span> Sticky headers
+            </NavLink>
+            <NavLink class="nav-item" href="chat">
+                <span class="ico">@ChatIcon</span> Chat / reverse
+            </NavLink>
             <NavLink class="nav-item" href="horizontal">
                 <span class="ico">@HorizontalIcon</span> Horizontal
             </NavLink>
@@ -59,6 +68,10 @@
     private static readonly MarkupString DynamicIcon = Svg("<rect x='3' y='4' width='18' height='4' rx='1'/><rect x='3' y='10' width='18' height='7' rx='1'/><rect x='3' y='19' width='18' height='2' rx='1'/>");
     private static readonly MarkupString CloudIcon = Svg("<path d='M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6 1.8A3.6 3.6 0 0 0 6 19z'/>");
     private static readonly MarkupString HorizontalIcon = Svg("<rect x='3' y='5' width='5' height='14' rx='1'/><rect x='10' y='5' width='5' height='14' rx='1' opacity='.7'/><rect x='17' y='5' width='4' height='14' rx='1' opacity='.45'/>");
+
+    private static readonly MarkupString InfiniteIcon = Svg("<path d='M5 9a3 3 0 1 0 0 6c1.6 0 2.6-1.2 3.5-2.5l3-4C15.4 7.2 16.4 6 18 6a3 3 0 1 1 0 6c-1.6 0-2.6-1.2-3.5-2.5'/>");
+    private static readonly MarkupString GroupIcon = Svg("<rect x='3' y='3' width='18' height='4' rx='1'/><line x1='6' y1='11' x2='18' y2='11'/><line x1='6' y1='15' x2='18' y2='15'/><line x1='6' y1='19' x2='18' y2='19'/>");
+    private static readonly MarkupString ChatIcon = Svg("<path d='M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.2A8 8 0 1 1 21 12z'/>");
 
     private static MarkupString Svg(string inner) =>
         new($"<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' width='18' height='18'>{inner}</svg>");
